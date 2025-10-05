@@ -90,6 +90,31 @@ export default function Patients() {
     patient.phone.includes(searchQuery) ||
     patient.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
+const [patientForm, setPatientForm] = useState({
+  name: '',
+  phone: '',
+  age: '',
+  gender: 'Male',
+  doctor: ''
+});
+const handleAddPatient = (e: React.FormEvent) => {
+  e.preventDefault();
+  const newPatient: Patient = {
+    id: patients.length + 1,
+    name: patientForm.name,
+    phone: patientForm.phone,
+    age: parseInt(patientForm.age),
+    gender: patientForm.gender,
+    lastVisit: new Date().toISOString().split('T')[0],
+    doctor: patientForm.doctor,
+    medicalHistory: []
+  };
+  setPatients([...patients, newPatient]);
+  setIsAddPatientOpen(false);
+  setPatientForm({ name: '', phone: '', age: '', gender: 'Male', doctor: '' });
+};
+
 
   const handleAddRecord = (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,8 +141,15 @@ export default function Patients() {
   return (
     <div className="p-4 lg:p-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Patient Records</h1>
-      </div>
+  <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Patient Records</h1>
+  <button
+    onClick={() => setIsAddPatientOpen(true)}
+    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-sky-500 to-emerald-500 text-white rounded-lg hover:from-sky-600 hover:to-emerald-600 transition-all duration-200 shadow-sm"
+  >
+    <Plus className="w-5 h-5" />
+    <span>Add Patient</span>
+  </button>
+</div>
 
       <div className="mb-6">
         <div className="relative max-w-md">
@@ -169,6 +201,98 @@ export default function Patients() {
           </table>
         </div>
       </div>
+      {isAddPatientOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="flex justify-between items-center p-6 border-b border-gray-200">
+        <h2 className="text-2xl font-bold text-gray-900">Add Patient</h2>
+        <button
+          onClick={() => setIsAddPatientOpen(false)}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <X className="w-5 h-5 text-gray-600" />
+        </button>
+      </div>
+      <form onSubmit={handleAddPatient} className="p-6 space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Patient Name
+          </label>
+          <input
+            type="text"
+            value={patientForm.name}
+            onChange={(e) => setPatientForm({ ...patientForm, name: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Phone Number
+          </label>
+          <input
+            type="text"
+            value={patientForm.phone}
+            onChange={(e) => setPatientForm({ ...patientForm, phone: e.target.value })}
+            placeholder="+91 9876543210"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+            required
+          />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Age</label>
+            <input
+              type="number"
+              value={patientForm.age}
+              onChange={(e) => setPatientForm({ ...patientForm, age: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+            <select
+              value={patientForm.gender}
+              onChange={(e) => setPatientForm({ ...patientForm, gender: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+            >
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Doctor</label>
+          <input
+            type="text"
+            value={patientForm.doctor}
+            onChange={(e) => setPatientForm({ ...patientForm, doctor: e.target.value })}
+            placeholder="Dr. Name"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+            required
+          />
+        </div>
+        <div className="flex justify-end space-x-3 pt-4">
+          <button
+            type="button"
+            onClick={() => setIsAddPatientOpen(false)}
+            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-6 py-2 bg-gradient-to-r from-sky-500 to-emerald-500 text-white rounded-lg hover:from-sky-600 hover:to-emerald-600 transition-all duration-200"
+          >
+            Add Patient
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
 
       {selectedPatient && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

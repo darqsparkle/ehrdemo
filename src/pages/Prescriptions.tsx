@@ -1,26 +1,42 @@
 import { useState } from 'react';
-import { Plus, X, MessageCircle, FileText } from 'lucide-react';
+import { Plus, X, MessageCircle, Upload, User } from 'lucide-react';
+
+interface Patient {
+  id: number;
+  name: string;
+  phone: string;
+  age: number;
+  gender: string;
+}
 
 interface Prescription {
   id: number;
   patientPhone: string;
   patientName: string;
   diagnosis: string;
-  medicines: string;
-  notes: string;
+  prescriptionFile: File | null;
+  prescriptionFileName: string;
   date: string;
   doctor: string;
 }
 
 export default function Prescriptions() {
+  // Mock patients data - in real app, this would come from shared state or API
+  const patients: Patient[] = [
+    { id: 1, name: 'Rajesh Kumar', phone: '+91 9876543210', age: 45, gender: 'Male' },
+    { id: 2, name: 'Priya Patel', phone: '+91 9876543211', age: 32, gender: 'Female' },
+    { id: 3, name: 'Amit Singh', phone: '+91 9876543212', age: 28, gender: 'Male' },
+    { id: 4, name: 'Roopan Vishnu', phone: '+91 9677055602', age: 21, gender: 'Male' }
+  ];
+
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([
     {
       id: 1,
       patientPhone: '+91 9876543210',
       patientName: 'Rajesh Kumar',
       diagnosis: 'Viral Fever',
-      medicines: 'Paracetamol 500mg - 1 tablet 3 times daily\nVitamin C - 1 tablet daily',
-      notes: 'Take rest, drink plenty of fluids',
+      prescriptionFile: null,
+      prescriptionFileName: 'prescription_rajesh_oct05.pdf',
       date: '2025-10-05',
       doctor: 'Dr. Sharma'
     },
@@ -29,8 +45,8 @@ export default function Prescriptions() {
       patientPhone: '+91 9876543211',
       patientName: 'Priya Patel',
       diagnosis: 'Back Pain',
-      medicines: 'Ibuprofen 400mg - 1 tablet 2 times daily\nMuscle relaxant - 1 tablet at night',
-      notes: 'Apply hot compress, avoid heavy lifting',
+      prescriptionFile: null,
+      prescriptionFileName: 'prescription_priya_oct04.pdf',
       date: '2025-10-04',
       doctor: 'Dr. Mehta'
     }
@@ -38,40 +54,54 @@ export default function Prescriptions() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [formData, setFormData] = useState({
-    patientPhone: '',
-    patientName: '',
     diagnosis: '',
-    medicines: '',
-    notes: ''
+    prescriptionFile: null as File | null
   });
+
+  const handlePatientSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const patientId = parseInt(e.target.value);
+    const patient = patients.find(p => p.id === patientId);
+    setSelectedPatient(patient || null);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFormData({ ...formData, prescriptionFile: e.target.files[0] });
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedPatient || !formData.prescriptionFile) return;
+
     const newPrescription: Prescription = {
       id: prescriptions.length + 1,
-      patientPhone: formData.patientPhone,
-      patientName: formData.patientName,
+      patientPhone: selectedPatient.phone,
+      patientName: selectedPatient.name,
       diagnosis: formData.diagnosis,
-      medicines: formData.medicines,
-      notes: formData.notes,
+      prescriptionFile: formData.prescriptionFile,
+      prescriptionFileName: formData.prescriptionFile.name,
       date: new Date().toISOString().split('T')[0],
       doctor: 'Dr. Sharma'
     };
     setPrescriptions([newPrescription, ...prescriptions]);
     setIsModalOpen(false);
+    setSelectedPatient(null);
     setFormData({
-      patientPhone: '',
-      patientName: '',
       diagnosis: '',
-      medicines: '',
-      notes: ''
+      prescriptionFile: null
     });
-    showToast('Prescription created successfully!');
+    showToast('Prescription uploaded successfully!');
   };
 
-  const handleGeneratePDF = (prescription: Prescription) => {
-    showToast('Prescription sent to WhatsApp!');
+  const handleSendToWhatsApp = (prescription: Prescription) => {
+    const phone = prescription.patientPhone.replace(/\D/g, '');
+    const message = `Hello ${prescription.patientName}, your prescription for ${prescription.diagnosis} dated ${prescription.date} is ready. File: ${prescription.prescriptionFileName}`;
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+    showToast('Opening WhatsApp...');
   };
 
   const showToast = (message: string) => {
@@ -88,7 +118,7 @@ export default function Prescriptions() {
           className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-sky-500 to-emerald-500 text-white rounded-lg hover:from-sky-600 hover:to-emerald-600 transition-all duration-200 shadow-sm"
         >
           <Plus className="w-5 h-5" />
-          <span>Create Prescription</span>
+          <span>Upload Prescription</span>
         </button>
       </div>
 
@@ -99,9 +129,14 @@ export default function Prescriptions() {
             className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow"
           >
             <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">{prescription.patientName}</h3>
-                <p className="text-sm text-gray-600">{prescription.patientPhone}</p>
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-sky-100 to-emerald-100 rounded-full flex items-center justify-center">
+                  <User className="w-5 h-5 text-sky-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">{prescription.patientName}</h3>
+                  <p className="text-sm text-gray-600">{prescription.patientPhone}</p>
+                </div>
               </div>
               <span className="text-xs text-gray-500">{prescription.date}</span>
             </div>
@@ -113,15 +148,11 @@ export default function Prescriptions() {
               </div>
 
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-1">Medicines</p>
-                <div className="text-sm text-gray-900 bg-emerald-50 px-3 py-2 rounded-lg whitespace-pre-line">
-                  {prescription.medicines}
+                <p className="text-sm font-medium text-gray-700 mb-1">Prescription Document</p>
+                <div className="flex items-center space-x-2 bg-emerald-50 px-3 py-2 rounded-lg">
+                  <Upload className="w-4 h-4 text-emerald-600" />
+                  <span className="text-sm text-gray-900 truncate">{prescription.prescriptionFileName}</span>
                 </div>
-              </div>
-
-              <div>
-                <p className="text-sm font-medium text-gray-700 mb-1">Notes</p>
-                <p className="text-sm text-gray-900 bg-amber-50 px-3 py-2 rounded-lg">{prescription.notes}</p>
               </div>
 
               <div>
@@ -129,21 +160,13 @@ export default function Prescriptions() {
               </div>
             </div>
 
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleGeneratePDF(prescription)}
-                className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 text-sm font-medium"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>Send to WhatsApp</span>
-              </button>
-              <button
-                onClick={() => showToast('Prescription sent to WhatsApp!')}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
-              >
-                <FileText className="w-4 h-4" />
-              </button>
-            </div>
+            <button
+              onClick={() => handleSendToWhatsApp(prescription)}
+              className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 text-sm font-medium"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>Send to WhatsApp</span>
+            </button>
           </div>
         ))}
       </div>
@@ -152,7 +175,7 @@ export default function Prescriptions() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b border-gray-200 sticky top-0 bg-white">
-              <h2 className="text-2xl font-bold text-gray-900">Create Prescription</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Upload Prescription</h2>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -161,34 +184,39 @@ export default function Prescriptions() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Patient Phone
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.patientPhone}
-                    onChange={(e) => setFormData({ ...formData, patientPhone: e.target.value })}
-                    placeholder="+91 9876543210"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Patient Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.patientName}
-                    onChange={(e) => setFormData({ ...formData, patientName: e.target.value })}
-                    placeholder="Enter patient name"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Patient
+                </label>
+                <select
+                  onChange={handlePatientSelect}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  required
+                >
+                  <option value="">Choose a patient...</option>
+                  {patients.map((patient) => (
+                    <option key={patient.id} value={patient.id}>
+                      {patient.name} - {patient.phone} ({patient.age}y, {patient.gender})
+                    </option>
+                  ))}
+                </select>
               </div>
+
+              {selectedPatient && (
+                <div className="bg-gradient-to-r from-sky-50 to-emerald-50 rounded-lg p-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Selected Patient:</p>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-sky-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">{selectedPatient.name}</p>
+                      <p className="text-sm text-gray-600">{selectedPatient.phone}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Diagnosis
@@ -202,32 +230,41 @@ export default function Prescriptions() {
                   required
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Medicines
+                  Upload Prescription (Scanned Document)
                 </label>
-                <textarea
-                  value={formData.medicines}
-                  onChange={(e) => setFormData({ ...formData, medicines: e.target.value })}
-                  placeholder="Enter medicines (one per line)"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-                  rows={5}
-                  required
-                />
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-sky-500 transition-colors">
+                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-sm text-gray-600 mb-2">
+                    Click to upload or drag and drop
+                  </p>
+                  <p className="text-xs text-gray-500 mb-4">
+                    PDF, JPG, PNG up to 10MB
+                  </p>
+                  <input
+                    type="file"
+                    onChange={handleFileChange}
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="hidden"
+                    id="file-upload"
+                    required
+                  />
+                  <label
+                    htmlFor="file-upload"
+                    className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer"
+                  >
+                    Choose File
+                  </label>
+                  {formData.prescriptionFile && (
+                    <p className="mt-3 text-sm text-emerald-600 font-medium">
+                      Selected: {formData.prescriptionFile.name}
+                    </p>
+                  )}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Notes
-                </label>
-                <textarea
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Additional instructions"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-                  rows={3}
-                  required
-                />
-              </div>
+
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
@@ -240,7 +277,7 @@ export default function Prescriptions() {
                   type="submit"
                   className="px-6 py-2 bg-gradient-to-r from-sky-500 to-emerald-500 text-white rounded-lg hover:from-sky-600 hover:to-emerald-600 transition-all duration-200"
                 >
-                  Create Prescription
+                  Upload Prescription
                 </button>
               </div>
             </form>
@@ -249,7 +286,7 @@ export default function Prescriptions() {
       )}
 
       {toastMessage && (
-        <div className="fixed bottom-8 right-8 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 animate-slide-in z-50">
+        <div className="fixed bottom-8 right-8 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 z-50">
           <MessageCircle className="w-5 h-5" />
           <span className="font-medium">{toastMessage}</span>
         </div>

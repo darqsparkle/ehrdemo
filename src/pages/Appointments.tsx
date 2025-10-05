@@ -22,29 +22,29 @@ export default function Appointments() {
       gender: 'Male',
       date: '2025-10-05',
       time: '09:00 AM',
-      doctor: 'Dr. Sharma',
+      doctor: 'Dr. ButtiPaaaaal',
       purpose: 'General Checkup',
       status: 'Completed'
     },
     {
       id: 2,
-      patientName: 'Priya Patel',
+      patientName: 'Priya ',
       age: 32,
       gender: 'Female',
       date: '2025-10-05',
       time: '10:30 AM',
-      doctor: 'Dr. Mehta',
+      doctor: 'Dr. RajiniKanth',
       purpose: 'Follow-up',
       status: 'Scheduled'
     },
     {
       id: 3,
-      patientName: 'Amit Singh',
+      patientName: 'Sridhar',
       age: 28,
       gender: 'Male',
       date: '2025-10-06',
       time: '11:00 AM',
-      doctor: 'Dr. Sharma',
+      doctor: 'Dr. Siddhu',
       purpose: 'Consultation',
       status: 'Scheduled'
     }
