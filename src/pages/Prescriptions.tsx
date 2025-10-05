@@ -24,7 +24,7 @@ export default function Prescriptions() {
   // Mock patients data - in real app, this would come from shared state or API
   const patients: Patient[] = [
     { id: 1, name: 'Rajesh Kumar', phone: '+91 9876543210', age: 45, gender: 'Male' },
-    { id: 2, name: 'Priya Patel', phone: '+91 9876543211', age: 32, gender: 'Female' },
+    { id: 2, name: 'Priya', phone: '+91 9876543211', age: 32, gender: 'Female' },
     { id: 3, name: 'Amit Singh', phone: '+91 9876543212', age: 28, gender: 'Male' },
     { id: 4, name: 'Roopan Vishnu', phone: '+91 9677055602', age: 21, gender: 'Male' }
   ];
@@ -43,7 +43,7 @@ export default function Prescriptions() {
     {
       id: 2,
       patientPhone: '+91 9876543211',
-      patientName: 'Priya Patel',
+      patientName: 'Priya',
       diagnosis: 'Back Pain',
       prescriptionFile: null,
       prescriptionFileName: 'prescription_priya_oct04.pdf',
