@@ -87,7 +87,7 @@ export default function DashboardLayout({ children, onLogout }: DashboardLayoutP
             <div className="p-4 bg-gradient-to-r from-sky-50 to-emerald-50 border-b border-gray-200">
               <div className="flex items-center space-x-2 text-sm">
                 <Building2 className="w-4 h-4 text-sky-600" />
-                <span className="font-medium text-gray-700">Lotus Multispeciality Clinic</span>
+                <span className="font-medium text-gray-700">Demo Multispeciality Clinic</span>
               </div>
             </div>
 
