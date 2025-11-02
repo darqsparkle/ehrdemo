@@ -11,7 +11,8 @@ import {
   Menu,
   X,
   Stethoscope,
-  Building2
+  Building2,
+  Store
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -30,6 +31,7 @@ export default function DashboardLayout({ children, onLogout }: DashboardLayoutP
     { icon: Users, label: 'Patients', path: '/patients' },
     { icon: Activity, label: 'Vitals', path: '/vitals' },
     { icon: FileText, label: 'Prescriptions', path: '/prescriptions' },
+    { icon: Store, label: 'Inventory', path: '/inventory' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 

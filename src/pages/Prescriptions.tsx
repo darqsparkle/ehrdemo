@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, X, MessageCircle, Upload, User } from 'lucide-react';
+import { useState } from "react";
+import { Plus, X, MessageCircle, Upload, User } from "lucide-react";
 
 interface Patient {
   id: number;
@@ -7,6 +7,15 @@ interface Patient {
   phone: string;
   age: number;
   gender: string;
+  isChronic: boolean;
+  chronicCondition?: string;
+  medicineReminder?: {
+    medicineName: string;
+    frequency: "weekly" | "biweekly" | "monthly";
+    lastPurchaseDate: string;
+    nextReminderDate: string;
+    notes?: string;
+  };
 }
 
 interface Prescription {
@@ -21,48 +30,109 @@ interface Prescription {
 }
 
 export default function Prescriptions() {
-  // Mock patients data - in real app, this would come from shared state or API
+  
   const patients: Patient[] = [
-    { id: 1, name: 'Rajesh Kumar', phone: '+91 9876543210', age: 45, gender: 'Male' },
-    { id: 2, name: 'Priya', phone: '+91 9876543211', age: 32, gender: 'Female' },
-    { id: 3, name: 'Amit Singh', phone: '+91 9876543212', age: 28, gender: 'Male' },
-    { id: 4, name: 'Roopan Vishnu', phone: '+91 9677055602', age: 21, gender: 'Male' }
+    {
+      id: 1,
+      name: "Rajesh Kumar",
+      phone: "+91 9940025603",
+      age: 45,
+      gender: "Male",
+      isChronic: true,
+      chronicCondition: "Diabetes Type 2",
+      medicineReminder: {
+        medicineName: "Insulin, Metformin",
+        frequency: "monthly",
+        lastPurchaseDate: "2025-10-01",
+        nextReminderDate: "2025-11-01",
+        notes: "Purchase from Apollo Pharmacy",
+      },
+    },
+    {
+      id: 2,
+      name: "Priya",
+      phone: "+91 9876543211",
+      age: 32,
+      gender: "Female",
+      isChronic: false,
+    },
+    {
+      id: 3,
+      name: "Amit Singh",
+      phone: "+91 9876543212",
+      age: 28,
+      gender: "Male",
+      isChronic: false,
+    },
+    {
+      id: 4,
+      name: "Roopan Vishnu",
+      phone: "+91 9677055602",
+      age: 21,
+      gender: "Male",
+      isChronic: true,
+      chronicCondition: "Hypertension",
+      medicineReminder: {
+        medicineName: "Amlodipine, Losartan",
+        frequency: "weekly",
+        lastPurchaseDate: "2025-10-01",
+        nextReminderDate: "2025-11-01",
+        notes: "Check BP before purchase",
+      },
+    },
   ];
 
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([
     {
       id: 1,
-      patientPhone: '+91 9876543210',
-      patientName: 'Rajesh Kumar',
-      diagnosis: 'Viral Fever',
+      patientPhone: "+91 9940025603",
+      patientName: "Rajesh Kumar",
+      diagnosis: "Viral Fever",
       prescriptionFile: null,
-      prescriptionFileName: 'prescription_rajesh_oct05.pdf',
-      date: '2025-10-05',
-      doctor: 'Dr. Sharma'
+      prescriptionFileName: "prescription_rajesh_oct05.pdf",
+      date: "2025-10-05",
+      doctor: "Dr. Sharma",
     },
     {
       id: 2,
-      patientPhone: '+91 9876543211',
-      patientName: 'Priya',
-      diagnosis: 'Back Pain',
+      patientPhone: "+91 9876543211",
+      patientName: "Priya",
+      diagnosis: "Back Pain",
       prescriptionFile: null,
-      prescriptionFileName: 'prescription_priya_oct04.pdf',
-      date: '2025-10-04',
-      doctor: 'Dr. Mehta'
-    }
+      prescriptionFileName: "prescription_priya_oct04.pdf",
+      date: "2025-10-04",
+      doctor: "Dr. Mehta",
+    },
   ]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
+  const [toastMessage, setToastMessage] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [formData, setFormData] = useState({
-    diagnosis: '',
-    prescriptionFile: null as File | null
+    diagnosis: "",
+    prescriptionFile: null as File | null,
   });
+  const handleSendMedicineReminder = (prescription: Prescription) => {
+    const patient = patients.find((p) => p.phone === prescription.patientPhone);
+    if (!patient?.medicineReminder) return;
 
+    const phone = prescription.patientPhone.replace(/\D/g, "");
+    const message = `Hello ${
+      prescription.patientName
+    }, this is a reminder to purchase your medicines: ${
+      patient.medicineReminder.medicineName
+    }. Next refill due: ${patient.medicineReminder.nextReminderDate}. ${
+      patient.medicineReminder.notes || ""
+    }`;
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(
+      message
+    )}`;
+    window.open(whatsappUrl, "_blank");
+    showToast("Medicine reminder sent via WhatsApp!");
+  };
   const handlePatientSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const patientId = parseInt(e.target.value);
-    const patient = patients.find(p => p.id === patientId);
+    const patient = patients.find((p) => p.id === patientId);
     setSelectedPatient(patient || null);
   };
 
@@ -83,36 +153,40 @@ export default function Prescriptions() {
       diagnosis: formData.diagnosis,
       prescriptionFile: formData.prescriptionFile,
       prescriptionFileName: formData.prescriptionFile.name,
-      date: new Date().toISOString().split('T')[0],
-      doctor: 'Dr. Sharma'
+      date: new Date().toISOString().split("T")[0],
+      doctor: "Dr. Sharma",
     };
     setPrescriptions([newPrescription, ...prescriptions]);
     setIsModalOpen(false);
     setSelectedPatient(null);
     setFormData({
-      diagnosis: '',
-      prescriptionFile: null
+      diagnosis: "",
+      prescriptionFile: null,
     });
-    showToast('Prescription uploaded successfully!');
+    showToast("Prescription uploaded successfully!");
   };
 
   const handleSendToWhatsApp = (prescription: Prescription) => {
-    const phone = prescription.patientPhone.replace(/\D/g, '');
+    const phone = prescription.patientPhone.replace(/\D/g, "");
     const message = `Hello ${prescription.patientName}, your prescription for ${prescription.diagnosis} dated ${prescription.date} is ready. File: ${prescription.prescriptionFileName}`;
-    const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
-    showToast('Opening WhatsApp...');
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(
+      message
+    )}`;
+    window.open(whatsappUrl, "_blank");
+    showToast("Opening WhatsApp...");
   };
 
   const showToast = (message: string) => {
     setToastMessage(message);
-    setTimeout(() => setToastMessage(''), 3000);
+    setTimeout(() => setToastMessage(""), 3000);
   };
 
   return (
     <div className="p-4 lg:p-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Prescriptions</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
+          Prescriptions
+        </h1>
         <button
           onClick={() => setIsModalOpen(true)}
           className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-sky-500 to-emerald-500 text-white rounded-lg hover:from-sky-600 hover:to-emerald-600 transition-all duration-200 shadow-sm"
@@ -134,8 +208,12 @@ export default function Prescriptions() {
                   <User className="w-5 h-5 text-sky-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{prescription.patientName}</h3>
-                  <p className="text-sm text-gray-600">{prescription.patientPhone}</p>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {prescription.patientName}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {prescription.patientPhone}
+                  </p>
                 </div>
               </div>
               <span className="text-xs text-gray-500">{prescription.date}</span>
@@ -143,20 +221,30 @@ export default function Prescriptions() {
 
             <div className="space-y-3 mb-4">
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-1">Diagnosis</p>
-                <p className="text-sm text-gray-900 bg-sky-50 px-3 py-2 rounded-lg">{prescription.diagnosis}</p>
+                <p className="text-sm font-medium text-gray-700 mb-1">
+                  Diagnosis
+                </p>
+                <p className="text-sm text-gray-900 bg-sky-50 px-3 py-2 rounded-lg">
+                  {prescription.diagnosis}
+                </p>
               </div>
 
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-1">Prescription Document</p>
+                <p className="text-sm font-medium text-gray-700 mb-1">
+                  Prescription Document
+                </p>
                 <div className="flex items-center space-x-2 bg-emerald-50 px-3 py-2 rounded-lg">
                   <Upload className="w-4 h-4 text-emerald-600" />
-                  <span className="text-sm text-gray-900 truncate">{prescription.prescriptionFileName}</span>
+                  <span className="text-sm text-gray-900 truncate">
+                    {prescription.prescriptionFileName}
+                  </span>
                 </div>
               </div>
 
               <div>
-                <p className="text-xs text-gray-500">Prescribed by: {prescription.doctor}</p>
+                <p className="text-xs text-gray-500">
+                  Prescribed by: {prescription.doctor}
+                </p>
               </div>
             </div>
 
@@ -167,6 +255,16 @@ export default function Prescriptions() {
               <MessageCircle className="w-4 h-4" />
               <span>Send to WhatsApp</span>
             </button>
+            {patients.find((p) => p.phone === prescription.patientPhone)
+              ?.isChronic && (
+              <button
+                onClick={() => handleSendMedicineReminder(prescription)}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all duration-200 text-sm font-medium mt-2"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Send Medicine Reminder</span>
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -175,7 +273,9 @@ export default function Prescriptions() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b border-gray-200 sticky top-0 bg-white">
-              <h2 className="text-2xl font-bold text-gray-900">Upload Prescription</h2>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Upload Prescription
+              </h2>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -196,7 +296,8 @@ export default function Prescriptions() {
                   <option value="">Choose a patient...</option>
                   {patients.map((patient) => (
                     <option key={patient.id} value={patient.id}>
-                      {patient.name} - {patient.phone} ({patient.age}y, {patient.gender})
+                      {patient.name} - {patient.phone} ({patient.age}y,{" "}
+                      {patient.gender})
                     </option>
                   ))}
                 </select>
@@ -204,14 +305,20 @@ export default function Prescriptions() {
 
               {selectedPatient && (
                 <div className="bg-gradient-to-r from-sky-50 to-emerald-50 rounded-lg p-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Selected Patient:</p>
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    Selected Patient:
+                  </p>
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
                       <User className="w-5 h-5 text-sky-600" />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">{selectedPatient.name}</p>
-                      <p className="text-sm text-gray-600">{selectedPatient.phone}</p>
+                      <p className="font-semibold text-gray-900">
+                        {selectedPatient.name}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {selectedPatient.phone}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -224,12 +331,44 @@ export default function Prescriptions() {
                 <input
                   type="text"
                   value={formData.diagnosis}
-                  onChange={(e) => setFormData({ ...formData, diagnosis: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, diagnosis: e.target.value })
+                  }
                   placeholder="Enter diagnosis"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                   required
                 />
               </div>
+              {selectedPatient?.isChronic && (
+  <div>
+    <p className="text-sm font-medium text-gray-700 mb-1">
+      Chronic Condition Reminder
+    </p>
+    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-2">
+      <div className="flex items-center space-x-2">
+        <span className="text-xs font-semibold text-amber-700 bg-amber-100 px-2 py-1 rounded">
+          CHRONIC
+        </span>
+        <span className="text-sm font-medium text-gray-900">
+          {selectedPatient.chronicCondition}
+        </span>
+      </div>
+      {selectedPatient.medicineReminder && (
+        <>
+          <div className="text-xs text-gray-700">
+            <span className="font-medium">Medicine:</span>{" "}
+            {selectedPatient.medicineReminder.medicineName}
+          </div>
+          <div className="text-xs text-gray-700">
+            <span className="font-medium">Next Reminder:</span>{" "}
+            {selectedPatient.medicineReminder.nextReminderDate}{" "}
+            ({selectedPatient.medicineReminder.frequency})
+          </div>
+        </>
+      )}
+    </div>
+  </div>
+)}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

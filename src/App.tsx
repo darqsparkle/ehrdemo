@@ -9,6 +9,7 @@ import Patients from './pages/Patients';
 import Vitals from './pages/Vitals';
 import Prescriptions from './pages/Prescriptions';
 import Settings from './pages/Settings';
+import Inventory from './pages/Inventory';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -90,6 +91,18 @@ function App() {
               </DashboardLayout>
             ) : (
               <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/inventory"
+          element={
+            isAuthenticated ? (
+              <DashboardLayout onLogout={handleLogout}>
+                <Inventory />
+              </DashboardLayout>
+            ) : (
+              <Navigate to="/inventory" replace />
             )
           }
         />
